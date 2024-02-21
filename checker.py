@@ -1,19 +1,41 @@
 #!/usr/bin/python3 
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from tkinter import *
 from tkinter import filedialog, ttk
 
+## --- IMPORTANT VARIABLE ----------------------------------
+PATH_FOLDER = ""
+PATH_FILE = ""
+
 def dummy():
     pass
 
-def main():
-    ## --- IMPORTANT VARIABLE ----------------------------------
-    PATH_FOLDER = ""
-    PATH_FILE = ""
+def open_file():
+    global PATH_FILE
 
+    if PATH_FILE == "":
+        filename = filedialog.askopenfilename(initialdir="C:/",
+                                              title="Open File",
+                                              filetypes=(('Excel Files', '*.xl*'), ('All Files', '*.*')))
+        PATH_FILE = r"{}".format(filename)
+    return PATH_FILE
+
+def open_folder():
+    global PATH_FOLDER
+
+    if PATH_FOLDER == "":
+        foldername = filedialog.askdirectory(initialdir="C:/",
+                                             title="Open Folder",
+                                             mustexist=True)
+        PATH_FOLDER = foldername
+    return PATH_FOLDER
+
+def show_tables():
+    pass
+
+def main():
     ## --- ROOT APPS -------------------------------------------
     root = Tk()
     root.title('Stock Opname Checker')
@@ -56,23 +78,23 @@ def main():
                       border=1)
     prev_btn.place(x=530, y=450)
     
-    openfile_btn = Button(rekap_paned, 
+    openfolder_btn = Button(rekap_paned, 
                       text='Open Folder', 
                       width=10, 
-                      command=dummy, 
+                      command=open_folder, 
                       relief="ridge", 
                       borderwidth=1, 
                       border=1)
-    openfile_btn.place(x=5, y=450)
+    openfolder_btn.place(x=5, y=450)
 
-    openfolder_btn = Button(rekap_paned, 
+    summarize_btn = Button(rekap_paned, 
                       text='Summarize', 
                       width=10, 
                       command=dummy, 
                       relief="ridge", 
                       borderwidth=1, 
                       border=1)
-    openfolder_btn.place(x=90, y=450)
+    summarize_btn.place(x=90, y=450)
 
     wh_paned = PanedWindow(bd=2, relief="groove")
     wh_paned.place(x=615, y=10, width=575, height=240)
@@ -94,8 +116,8 @@ def main():
     file_menu = Menu(my_menu, tearoff=False)
     my_menu.add_cascade(label='File', menu=file_menu)
 
-    file_menu.add_command(label='Open File ...        ', command=dummy)
-    file_menu.add_command(label='Open Folder ...      ', command=dummy)
+    file_menu.add_command(label='Open File ...        ', command=open_file)
+    file_menu.add_command(label='Open Folder ...      ', command=open_folder)
     file_menu.add_separator()
     file_menu.add_command(label='Exit                 ', command=root.quit)
 
