@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import table as tb
+import customtkinter
 from tkinter import *
 from tkinter import filedialog, ttk
 
@@ -13,15 +14,14 @@ TABLE_REKAP = ""
 TABLE_SJWH = ""
 TABLE_STOCK = ""
 TABLE_NAME = ""
+FILE_OPEN = False
+switch_btn = ""
 
 def dummy():
     pass
 
-def combo_click(event):
-    pass
-
 def open_file(frame_rekap="", frame_stock="", frame_sjwh=""):
-    global PATH_FILE, TABLE_REKAP, TABLE_SJWH, TABLE_STOCK, TABLE_NAME
+    global PATH_FILE, TABLE_REKAP, TABLE_SJWH, TABLE_STOCK, TABLE_NAME, FILE_OPEN, switch
 
     filename = filedialog.askopenfilename(initialdir="C:/",
                                               title="Open File",
@@ -39,6 +39,8 @@ def open_file(frame_rekap="", frame_stock="", frame_sjwh=""):
 
     TABLE_NAME.config(text="Table : " + PATH_FILE.split('/')[-1])
 
+    FILE_OPEN = TRUE
+    switch_btn.configure(state=ACTIVE)
 
 def open_folder():
     global PATH_FOLDER
@@ -53,8 +55,17 @@ def open_folder():
 def show_tables():
     pass
 
+def search(frame, seach_value=""):
+    global TABLE_SJWH, FILE_OPEN
+
+    if FILE_OPEN:
+        TABLE_SJWH.show(seach_value)
+        # print(seach_value)
+    else:
+        return 0
+
 def main():
-    global TABLE_NAME
+    global TABLE_NAME, switch_btn
 
     ## --- ROOT APPS -------------------------------------------
     root = Tk()
@@ -119,6 +130,25 @@ def main():
                       border=1)
     summarize_btn.place(x=95, y=495)
 
+    def switch():
+        global FILE_OPEN
+        
+        if FILE_OPEN: 
+            TABLE_REKAP.show(mode=switch_var.get())
+        else:
+            return 0
+
+    switch_var = customtkinter.StringVar(value='off')
+    switch_btn = customtkinter.CTkSwitch(rekap_paned,
+                                         text = "",
+                                         command=switch,
+                                         onvalue='on',
+                                         offvalue='off',
+                                         variable=switch_var,
+                                         state=DISABLED
+                                         )
+    switch_btn.place(x=530, y= 495)
+
     wh_paned = PanedWindow(bd=2, relief="groove")
     wh_paned.place(x=615, y=10, width=575, height=260)
     wh_frame = Frame(wh_paned, width=560, height=210, background='#cccbca', relief="groove", border=1)
@@ -132,12 +162,13 @@ def main():
     # wh_combobox.current(0)
     # wh_combobox.bind("<<ComboboxSelected>>", combo_click)
     # wh_combobox.place(x=60, y=225)
+
     wh_search = Entry(wh_paned, width=20)
     wh_search.place(x=60, y=228)
     wh_search_btn = Button(wh_paned, 
                            text='Search', 
                            width=6, 
-                           command=dummy, 
+                           command=lambda : search(frame=wh_frame, seach_value=str(wh_search.get())), 
                            relief="ridge", 
                            borderwidth=1, 
                            border=1)
@@ -151,28 +182,38 @@ def main():
     stock_label.place(x=1070, y=270)
     stock_filter_label = Label(stock_paned, text='Filter  : ')
     stock_filter_label.place(x=10, y=225)
-    # stock_combobox_options = ['']
-    # stock_combobox = ttk.Combobox(stock_paned, values=stock_combobox_options)
-    # stock_combobox.current(0)
-    # stock_combobox.bind("<<ComboboxSelected>>", combo_click)
-    # stock_combobox.place(x=60, y=225)
-    stock_search = Entry(stock_paned, width=20)
-    stock_search.place(x=60, y=228)
-    stock_search_btn = Button(stock_paned, 
-                           text='Search', 
-                           width=6, 
-                           command=dummy, 
-                           relief="ridge", 
-                           borderwidth=1, 
-                           border=1)
-    stock_search_btn.place(x=190, y=226)
+
+    def combo_click(event):
+        global TABLE_STOCK, FILE_OPEN
+
+        filter_value = str(stock_combobox.get())
+        if FILE_OPEN:
+            TABLE_STOCK.show(filter=filter_value)
+        else:
+            return 0
+
+    stock_combobox_options = ['', 'Adjust In ', 'Adjust Out ', 'Sold ', 'Uknown']
+    stock_combobox = ttk.Combobox(stock_paned, values=stock_combobox_options)
+    stock_combobox.current(0)
+    stock_combobox.bind("<<ComboboxSelected>>",combo_click)
+    stock_combobox.place(x=60, y=225)
+
+    # stock_search = Entry(stock_paned, width=20)
+    # stock_search.place(x=60, y=228)
+    # stock_search_btn = Button(stock_paned, 
+    #                        text='Search', 
+    #                        width=6, 
+    #                        command=dummy, 
+    #                        relief="ridge", 
+    #                        borderwidth=1, 
+    #                        border=1)
+    # stock_search_btn.place(x=190, y=226)
 
     ## --- MENU BAR --------------------------------------------------------
     my_menu = Menu(root)
 
     file_menu = Menu(my_menu, tearoff=False)
     my_menu.add_cascade(label='File', menu=file_menu)
-
     file_menu.add_command(label='Open File ...        ', 
                           command=lambda : open_file(frame_rekap=rekap_frame, 
                                                      frame_sjwh=wh_frame, 
@@ -184,7 +225,6 @@ def main():
 
     edit_menu = Menu(my_menu, tearoff=False)
     my_menu.add_cascade(label='Help', menu=edit_menu)
-
     edit_menu.add_command(label='About             ', command=dummy)
     edit_menu.add_command(label='Documentation     ', command=dummy)
 
