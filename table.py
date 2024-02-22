@@ -36,7 +36,7 @@ class Rekap:
         self.TABLE_ORIGINAL = df
         self.TABLE_OUTPUT = df[['PLU Number Barcode', 'PLU Name Item Menu', 'IN-RAPTOR', 'IN -SJ WH']]
     
-    def show(self):
+    def show(self, mode="off"):
         my_tree = ttk.Treeview(self.FRAME)
 
         # Clear old treeview
@@ -55,14 +55,23 @@ class Rekap:
                 my_tree.column(column, width=70)
         # Set up all rows
         df_rows = self.TABLE_OUTPUT.to_numpy().tolist()
-
-        for i, row in enumerate(df_rows):
-            if row[2] != row[3]:
-                # print(row)
-                my_tree.insert("", "end", values=row, tags="red")
-            else:
-                my_tree.insert("", "end", values=row, tags="white")
         
+        if mode == "off":
+            for i, row in enumerate(df_rows):
+                if row[2] != row[3]:
+                    # print(row)
+                    my_tree.insert("", "end", values=row, tags="red")
+                else:
+                    my_tree.insert("", "end", values=row, tags="white")
+        
+        elif mode == "on":
+            for i, row in enumerate(df_rows):
+                if row[2] != row[3]:
+                    # print(row)
+                    my_tree.insert("", "end", values=row, tags="red")
+                else:
+                    continue
+
         my_tree.tag_configure("red", background="#fa9898")
                     
         my_tree.pack(expand=True, fill='both')
@@ -103,7 +112,7 @@ class SJWH:
 
         self.TABLE = df
     
-    def show(self):
+    def show(self, search=""):
         my_tree = ttk.Treeview(self.FRAME)
 
         # Clear old treeview
@@ -112,7 +121,7 @@ class SJWH:
         # Set up new tree
         my_tree['column'] = list(self.TABLE.columns)
         my_tree['show'] = "headings"
-            
+        
         # Set up all column names
         for column in my_tree['column']:        
             my_tree.heading(column, text=column, anchor=W)
@@ -123,9 +132,17 @@ class SJWH:
         # Set up all rows
         df_rows = self.TABLE.to_numpy().tolist()
 
-        for row in df_rows:
-            my_tree.insert("", "end", values=row, tags="row")
-                    
+        if search == "":
+            for row in df_rows:
+                my_tree.insert("", "end", values=row, tags="row")
+
+        else:
+            for row in df_rows:
+                if search.upper() in row[2]:
+                    my_tree.insert("", "end", values=row, tags="row")
+                else:
+                    continue
+                        
         my_tree.pack(expand=True, fill='both')
         my_tree.place(x=0, y=0, width=560, height=215)
             
@@ -157,10 +174,11 @@ class Stock:
 
         df.columns = df.iloc[0].values
         df.drop(0, inplace=True)
+        df.fillna("Uknown", inplace=True)
 
         self.TABLE = df
     
-    def show(self):
+    def show(self, filter=""):
         my_tree = ttk.Treeview(self.FRAME)
 
         # Clear old treeview
@@ -180,8 +198,15 @@ class Stock:
         # Set up all rows
         df_rows = self.TABLE.to_numpy().tolist()
 
-        for row in df_rows:
-            my_tree.insert("", "end", values=row, tags="row")
+        if filter == "":
+            for row in df_rows:
+                my_tree.insert("", "end", values=row, tags="row")
+        else:
+            for row in df_rows:
+                if row[3] == filter:
+                    my_tree.insert("", "end", values=row, tags="row")
+                else:
+                    continue
                     
         my_tree.pack(expand=True, fill='both')
         my_tree.place(x=0, y=0, width=560, height=215)
