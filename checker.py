@@ -15,19 +15,19 @@ TABLE_SJWH = ""
 TABLE_STOCK = ""
 TABLE_NAME = ""
 FILE_OPEN = False
-switch_btn = ""
+
 
 def dummy():
     pass
 
 def open_file(frame_rekap="", frame_stock="", frame_sjwh=""):
-    global PATH_FILE, TABLE_REKAP, TABLE_SJWH, TABLE_STOCK, TABLE_NAME, FILE_OPEN, switch
+    global PATH_FILE, TABLE_REKAP, TABLE_SJWH, TABLE_STOCK, TABLE_NAME, FILE_OPEN, switch, log
 
     filename = filedialog.askopenfilename(initialdir="C:/",
                                               title="Open File",
                                               filetypes=(('Excel Files', '*.xl*'), ('All Files', '*.*')))
     PATH_FILE = r"{}".format(filename)
-    
+
     TABLE_REKAP = tb.Rekap(PATH_FILE, frame=frame_rekap)
     TABLE_REKAP.show()
 
@@ -65,7 +65,7 @@ def search(frame, seach_value=""):
         return 0
 
 def main():
-    global TABLE_NAME, switch_btn
+    global TABLE_NAME, switch_btn, log
 
     ## --- ROOT APPS -------------------------------------------
     root = Tk()
@@ -112,23 +112,23 @@ def main():
                       border=1)
     prev_btn.place(x=530, y=10)
     
-    openfolder_btn = Button(rekap_paned, 
-                      text='Open Folder', 
+    openfile_btn = Button(rekap_paned, 
+                      text='Open File', 
                       width=10, 
-                      command=open_folder, 
+                      command=open_file, 
                       relief="ridge", 
                       borderwidth=1, 
                       border=1)
-    openfolder_btn.place(x=10, y=495)
+    openfile_btn.place(x=10, y=495)
 
-    summarize_btn = Button(rekap_paned, 
-                      text='Summarize', 
+    openfolder_btn = Button(rekap_paned, 
+                      text='Open Folder', 
                       width=10, 
                       command=dummy, 
                       relief="ridge", 
                       borderwidth=1, 
                       border=1)
-    summarize_btn.place(x=95, y=495)
+    openfolder_btn.place(x=95, y=495)
 
     def switch():
         global FILE_OPEN
