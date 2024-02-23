@@ -84,6 +84,21 @@ class Rekap:
         scroll_x.pack(side='bottom', fill='x')
 
         my_tree.configure(xscrollcommand=scroll_x.set, yscrollcommand=scroll_y.set)
+        
+        def edit():
+            selected_item = my_tree.selection()
+            data = my_tree.item(selected_item, 'values')
+            print(data)
+
+        def popup(event):
+            # Menampilkan popup hanya jika ada item yang dipilih
+            if my_tree.selection():
+                popup_menu.post(event.x_root, event.y_root)
+
+        popup_menu = Menu(self.FRAME, tearoff=0)
+        popup_menu.add_command(label="Edit", command=edit)
+
+        my_tree.bind("<Button-3>", popup)
 
 class SJWH:
     TABLE = pd.DataFrame([[]])
