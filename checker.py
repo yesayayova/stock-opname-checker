@@ -4,29 +4,39 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import table as tb
 import customtkinter
+import os
 from tkinter import *
 from tkinter import filedialog, ttk
 
 ## --- IMPORTANT VARIABLE ----------------------------------
-PATH_FOLDER = ""
 PATH_FILE = ""
+
 TABLE_REKAP = ""
 TABLE_SJWH = ""
 TABLE_STOCK = ""
+
 TABLE_NAME = ""
 FILE_OPEN = False
+
+LIST_FOLDER = []
+CURRENT_TABLE_ID = 0
 
 
 def dummy():
     pass
 
-def open_file(frame_rekap="", frame_stock="", frame_sjwh=""):
-    global PATH_FILE, TABLE_REKAP, TABLE_SJWH, TABLE_STOCK, TABLE_NAME, FILE_OPEN, switch, log
+def open_file(path = "", frame_rekap="", frame_stock="", frame_sjwh=""):
+    global PATH_FILE, TABLE_REKAP, TABLE_SJWH, TABLE_STOCK, TABLE_NAME, FILE_OPEN, CURRENT_TABLE_ID, switch, log
 
-    filename = filedialog.askopenfilename(initialdir="C:/",
-                                              title="Open File",
-                                              filetypes=(('Excel Files', '*.xl*'), ('All Files', '*.*')))
-    PATH_FILE = r"{}".format(filename)
+    if path == "":
+        filename = filedialog.askopenfilename(initialdir="C:/",
+                                                title="Open File",
+                                                filetypes=(('Excel Files', '*.xl*'), ('All Files', '*.*')))
+        PATH_FILE = r"{}".format(filename)
+    else:
+        PATH_FILE = path
+
+    print(PATH_FILE)
 
     TABLE_REKAP = tb.Rekap(PATH_FILE, frame=frame_rekap)
     TABLE_REKAP.show()
@@ -42,15 +52,51 @@ def open_file(frame_rekap="", frame_stock="", frame_sjwh=""):
     FILE_OPEN = TRUE
     switch_btn.configure(state=ACTIVE)
 
-def open_folder():
-    global PATH_FOLDER
+def open_folder(frame_rekap, frame_stock, frame_sjwh):
+    global LIST_FOLDER, CURRENT_TABLE_ID
 
-    if PATH_FOLDER == "":
-        foldername = filedialog.askdirectory(initialdir="C:/",
-                                             title="Open Folder",
-                                             mustexist=True)
-        PATH_FOLDER = foldername
-    print(PATH_FOLDER)
+    foldername = filedialog.askdirectory(initialdir="C:/",
+                                            title="Open Folder",
+                                            mustexist=True)
+    for filename in os.listdir(foldername):
+        LIST_FOLDER.append(str(foldername + '/' + filename))
+
+    # print(CURRENT_TABLE)
+
+    open_file(path=LIST_FOLDER[CURRENT_TABLE_ID], 
+              frame_rekap=frame_rekap, 
+              frame_sjwh=frame_sjwh,
+              frame_stock=frame_stock)
+    
+def next(frame_rekap, frame_stock, frame_sjwh):
+    global CURRENT_TABLE_ID
+
+    if CURRENT_TABLE_ID == len(LIST_FOLDER)-1:
+        print('test')
+        return 0
+    else:
+        CURRENT_TABLE_ID += 1
+        path = LIST_FOLDER[CURRENT_TABLE_ID]
+        open_file(path=path, 
+              frame_rekap=frame_rekap, 
+              frame_sjwh=frame_sjwh,
+              frame_stock=frame_stock)
+    print(path)
+
+def prev(frame_rekap, frame_stock, frame_sjwh):
+    global CURRENT_TABLE_ID
+
+    if CURRENT_TABLE_ID == 0:
+        return 0
+    else:
+        CURRENT_TABLE_ID -= 1
+        path = LIST_FOLDER[CURRENT_TABLE_ID]
+        open_file(path=path, 
+              frame_rekap=frame_rekap, 
+              frame_sjwh=frame_sjwh,
+              frame_stock=frame_stock)
+    print(path)
+    
 
 def show_tables():
     pass
@@ -97,7 +143,10 @@ def main():
     next_btn = Button(rekap_paned, 
                       text='>', 
                       width=2, 
-                      command=dummy, 
+                      command=lambda : next(frame_rekap=rekap_frame, 
+                                            frame_sjwh=wh_frame, 
+                                            frame_stock=stock_frame
+                                            ),
                       relief="ridge", 
                       borderwidth=1, 
                       border=1)
@@ -106,7 +155,10 @@ def main():
     prev_btn = Button(rekap_paned, 
                       text='<', 
                       width=2, 
-                      command=dummy, 
+                      command=lambda : prev(frame_rekap=rekap_frame, 
+                                            frame_sjwh=wh_frame, 
+                                            frame_stock=stock_frame
+                                            ), 
                       relief="ridge", 
                       borderwidth=1, 
                       border=1)
@@ -221,7 +273,9 @@ def main():
                                                      frame_sjwh=wh_frame, 
                                                      frame_stock=stock_frame
                                                     ))
-    file_menu.add_command(label='Open Folder ...      ', command=open_folder)
+    file_menu.add_command(label='Open Folder ...      ', command=lambda : open_folder(frame_rekap=rekap_frame,
+                                                                                      frame_sjwh=wh_frame,
+                                                                                      frame_stock=stock_frame))
     file_menu.add_separator()
     file_menu.add_command(label='Exit                 ', command=root.quit)
 
