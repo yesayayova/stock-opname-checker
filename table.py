@@ -34,7 +34,8 @@ class Rekap:
         df = df.iloc[:end_point]
             
         self.TABLE_ORIGINAL = df
-        self.TABLE_OUTPUT = df[['PLU Number Barcode', 'PLU Name Item Menu', 'IN-RAPTOR', 'IN -SJ WH']]
+        self.TABLE_OUTPUT = df[['PLU Number Barcode', 'PLU Name Item Menu', 'IN-RAPTOR', 'IN -SJ WH', 'KET SELISIH']]
+        self.TABLE_OUTPUT['KET SELISIH'] = self.TABLE_OUTPUT['IN-RAPTOR'] - self.TABLE_OUTPUT['IN -SJ WH']
     
     def show(self, mode="off"):
         my_tree = ttk.Treeview(self.FRAME)
@@ -58,22 +59,27 @@ class Rekap:
         
         if mode == "off":
             for i, row in enumerate(df_rows):
-                if row[2] != row[3]:
+                if (row[2] != row[3]) and (row[4]> 0):
                     # print(row)
                     my_tree.insert("", "end", values=row, tags="red")
+                elif (row[2] != row[3]) and (row[4]< 0):
+                    my_tree.insert("", "end", values=row, tags="yellow")
                 else:
                     my_tree.insert("", "end", values=row, tags="white")
         
         elif mode == "on":
             for i, row in enumerate(df_rows):
-                if row[2] != row[3]:
+                if (row[2] != row[3]) and (row[4]> 0):
                     # print(row)
                     my_tree.insert("", "end", values=row, tags="red")
+                elif (row[2] != row[3]) and (row[4]< 0):
+                    my_tree.insert("", "end", values=row, tags="yellow")
                 else:
                     continue
 
         my_tree.tag_configure("red", background="#fa9898")
-                    
+        my_tree.tag_configure("yellow", background="#e8f28f")
+
         my_tree.pack(expand=True, fill='both')
         my_tree.place(x=0, y=0, width=585, height=445)
             
