@@ -50,7 +50,7 @@ def open_folder():
                                              title="Open Folder",
                                              mustexist=True)
         PATH_FOLDER = foldername
-    return PATH_FOLDER
+    print(PATH_FOLDER)
 
 def show_tables():
     pass
