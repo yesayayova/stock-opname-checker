@@ -115,7 +115,9 @@ def main():
     openfile_btn = Button(rekap_paned, 
                       text='Open File', 
                       width=10, 
-                      command=open_file, 
+                      command=lambda : open_file(frame_rekap=rekap_frame, 
+                                                 frame_sjwh=wh_frame, 
+                                                 frame_stock=stock_frame), 
                       relief="ridge", 
                       borderwidth=1, 
                       border=1)
