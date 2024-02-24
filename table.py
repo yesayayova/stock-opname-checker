@@ -35,7 +35,14 @@ class Rekap:
             
         self.TABLE_ORIGINAL = df
         self.TABLE_OUTPUT = df[['PLU Number Barcode', 'PLU Name Item Menu', 'IN-RAPTOR', 'IN -SJ WH', 'KET SELISIH']]
-        self.TABLE_OUTPUT['KET SELISIH'] = self.TABLE_OUTPUT['IN-RAPTOR'] - self.TABLE_OUTPUT['IN -SJ WH']
+
+        ket_selisih = []
+        for i in range(self.TABLE_ORIGINAL.shape[0]):
+            # ket_selisih.append(self.TABLE_ORIGINAL.iloc[i]['IN-RAPTOR'] - self.TABLE_ORIGINAL.iloc[i]['IN -SJ WH'])
+            self.TABLE_OUTPUT.loc[i, 'KET SELISIH'] = self.TABLE_ORIGINAL.iloc[i]['IN-RAPTOR'] - self.TABLE_ORIGINAL.iloc[i]['IN -SJ WH']
+        # self.TABLE_OUTPUT['KET SELISIH'] = self.TABLE_OUTPUT['IN-RAPTOR'] - self.TABLE_OUTPUT['IN -SJ WH']
+    
+        
     
     def show(self, mode="off"):
         my_tree = ttk.Treeview(self.FRAME)
