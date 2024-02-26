@@ -32,19 +32,35 @@ class Rekap:
             if type(df.iloc[i]['PLU Number Barcode']) != str:
                 end_point = i
                 break
+            list_selisih.append(df.loc[i, 'IN-RAPTOR'] - df.loc[i, 'IN -SJ WH'])
             list_id.append(i)
-            list_selisih.append(df.iloc[i]['IN-RAPTOR'] - df.iloc[i]['IN -SJ WH'])
+
         
         df = df.iloc[:end_point]
-        df['ID'] = list_id
         df['Selisih'] = list_selisih
-
-        # for i in range(df.shape[0]):
-        #     df.iloc[i, 'KET SELISIH'] = df.iloc[i]['IN-RAPTOR'] - df.iloc[i]['IN -SJ WH']
+        df['ID'] = list_id
             
         self.TABLE_ORIGINAL = df
-        self.TABLE_OUTPUT = df[['ID','PLU Number Barcode', 'PLU Name Item Menu', 'IN-RAPTOR', 'IN -SJ WH', 'Selisih']]
+        self.TABLE_OUTPUT = df[['ID', 'PLU Number Barcode', 'PLU Name Item Menu', 'IN-RAPTOR', 'IN -SJ WH', 'Selisih']]
+
+        # ket_selisih = []
+        # for i in range(self.TABLE_ORIGINAL.shape[0]):
+        #     ket_selisih.append(self.TABLE_ORIGINAL.iloc[i]['IN-RAPTOR'] - self.TABLE_ORIGINAL.iloc[i]['IN -SJ WH'])
+        
+        # self.TABLE_OUTPUT.loc[:, 'KET SELISIH'] = ket_selisih
     
+    def get_table_original(self):
+        return self.TABLE_ORIGINAL
+    
+    def get_table_output(self):
+        return self.TABLE_OUTPUT
+    
+    def edit_table(self, raptor, sjwh, id):
+        self.TABLE_ORIGINAL.loc[id, 'IN-RAPTOR'] = raptor
+        self.TABLE_ORIGINAL.loc[id, 'IN -SJ WH'] = sjwh
+        self.TABLE_OUTPUT.loc[id, 'IN-RAPTOR'] = raptor
+        self.TABLE_OUTPUT.loc[id, 'IN -SJ WH'] = sjwh
+
     def show(self, mode="off"):
         my_tree = ttk.Treeview(self.FRAME)
 
