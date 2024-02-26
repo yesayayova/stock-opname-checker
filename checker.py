@@ -211,11 +211,6 @@ def main():
     wh_label.place(x=1130, y=0)
     wh_filter_label = Label(wh_paned, text='Filter  : ')
     wh_filter_label.place(x=10, y=228)
-    # wh_combobox_options = ['']
-    # wh_combobox = ttk.Combobox(wh_paned, values=wh_combobox_options)
-    # wh_combobox.current(0)
-    # wh_combobox.bind("<<ComboboxSelected>>", combo_click)
-    # wh_combobox.place(x=60, y=225)
 
     wh_search = Entry(wh_paned, width=20)
     wh_search.place(x=60, y=228)
@@ -251,17 +246,6 @@ def main():
     stock_combobox.current(0)
     stock_combobox.bind("<<ComboboxSelected>>",combo_click)
     stock_combobox.place(x=60, y=225)
-
-    # stock_search = Entry(stock_paned, width=20)
-    # stock_search.place(x=60, y=228)
-    # stock_search_btn = Button(stock_paned, 
-    #                        text='Search', 
-    #                        width=6, 
-    #                        command=dummy, 
-    #                        relief="ridge", 
-    #                        borderwidth=1, 
-    #                        border=1)
-    # stock_search_btn.place(x=190, y=226)
 
     ## --- MENU BAR --------------------------------------------------------
     my_menu = Menu(root)
