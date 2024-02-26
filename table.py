@@ -25,24 +25,25 @@ class Rekap:
         df.reset_index(drop=True, inplace=True)
 
         end_point = 0
+        list_selisih = []
+        list_id = []
 
         for i in range(df.shape[0]):
             if type(df.iloc[i]['PLU Number Barcode']) != str:
                 end_point = i
                 break
+            list_id.append(i)
+            list_selisih.append(df.iloc[i]['IN-RAPTOR'] - df.iloc[i]['IN -SJ WH'])
         
         df = df.iloc[:end_point]
+        df['ID'] = list_id
+        df['Selisih'] = list_selisih
+
+        # for i in range(df.shape[0]):
+        #     df.iloc[i, 'KET SELISIH'] = df.iloc[i]['IN-RAPTOR'] - df.iloc[i]['IN -SJ WH']
             
         self.TABLE_ORIGINAL = df
-        self.TABLE_OUTPUT = df[['PLU Number Barcode', 'PLU Name Item Menu', 'IN-RAPTOR', 'IN -SJ WH', 'KET SELISIH']]
-
-        ket_selisih = []
-        for i in range(self.TABLE_ORIGINAL.shape[0]):
-            # ket_selisih.append(self.TABLE_ORIGINAL.iloc[i]['IN-RAPTOR'] - self.TABLE_ORIGINAL.iloc[i]['IN -SJ WH'])
-            self.TABLE_OUTPUT.loc[i, 'KET SELISIH'] = self.TABLE_ORIGINAL.iloc[i]['IN-RAPTOR'] - self.TABLE_ORIGINAL.iloc[i]['IN -SJ WH']
-        # self.TABLE_OUTPUT['KET SELISIH'] = self.TABLE_OUTPUT['IN-RAPTOR'] - self.TABLE_OUTPUT['IN -SJ WH']
-    
-        
+        self.TABLE_OUTPUT = df[['ID','PLU Number Barcode', 'PLU Name Item Menu', 'IN-RAPTOR', 'IN -SJ WH', 'Selisih']]
     
     def show(self, mode="off"):
         my_tree = ttk.Treeview(self.FRAME)
@@ -59,6 +60,8 @@ class Rekap:
             my_tree.heading(column, text=column, anchor=W)
             if 'PLU' in column:
                 my_tree.column(column, width=140)
+            elif 'ID' in column:
+                my_tree.column(column, width=20)
             else:
                 my_tree.column(column, width=70)
         # Set up all rows
@@ -66,20 +69,20 @@ class Rekap:
         
         if mode == "off":
             for i, row in enumerate(df_rows):
-                if (row[2] != row[3]) and (row[4]> 0):
+                if (row[3] != row[4]) and (row[5]> 0):
                     # print(row)
                     my_tree.insert("", "end", values=row, tags="red")
-                elif (row[2] != row[3]) and (row[4]< 0):
+                elif (row[3] != row[4]) and (row[5]< 0):
                     my_tree.insert("", "end", values=row, tags="yellow")
                 else:
                     my_tree.insert("", "end", values=row, tags="white")
         
         elif mode == "on":
             for i, row in enumerate(df_rows):
-                if (row[2] != row[3]) and (row[4]> 0):
+                if (row[3] != row[4]) and (row[5]> 0):
                     # print(row)
                     my_tree.insert("", "end", values=row, tags="red")
-                elif (row[2] != row[3]) and (row[4]< 0):
+                elif (row[3] != row[4]) and (row[5]< 0):
                     my_tree.insert("", "end", values=row, tags="yellow")
                 else:
                     continue
@@ -98,10 +101,114 @@ class Rekap:
 
         my_tree.configure(xscrollcommand=scroll_x.set, yscrollcommand=scroll_y.set)
         
+        def save(id, wh, raptor, top):
+            print(wh, raptor)
+
+            id = int(id)
+            self.TABLE_ORIGINAL.loc[id, ('IN-RAPTOR')] = raptor
+            self.TABLE_ORIGINAL.loc[id, ('IN -SJ WH')] = wh
+
+            self.TABLE_OUTPUT.loc[id, ('IN-RAPTOR')] = raptor
+            self.TABLE_OUTPUT.loc[id, ('IN -SJ WH')] = wh
+
+            my_tree = ttk.Treeview(self.FRAME)
+
+            # Clear old treeview
+            my_tree.delete(*my_tree.get_children())
+
+            # Set up new tree
+            my_tree['column'] = list(self.TABLE_OUTPUT.columns)
+            my_tree['show'] = "headings"
+                
+            # Set up all column names
+            for column in my_tree['column']:        
+                my_tree.heading(column, text=column, anchor=W)
+                if 'PLU' in column:
+                    my_tree.column(column, width=140)
+                elif 'ID' in column:
+                    my_tree.column(column, width=20)
+                else:
+                    my_tree.column(column, width=70)
+            # Set up all rows
+            df_rows = self.TABLE_OUTPUT.to_numpy().tolist()
+            
+            if mode == "off":
+                for i, row in enumerate(df_rows):
+                    if (row[3] != row[4]) and (row[5]> 0):
+                        # print(row)
+                        my_tree.insert("", "end", values=row, tags="red")
+                    elif (row[3] != row[4]) and (row[5]< 0):
+                        my_tree.insert("", "end", values=row, tags="yellow")
+                    else:
+                        my_tree.insert("", "end", values=row, tags="white")
+            
+            elif mode == "on":
+                for i, row in enumerate(df_rows):
+                    if (row[3] != row[4]) and (row[5]> 0):
+                        # print(row)
+                        my_tree.insert("", "end", values=row, tags="red")
+                    elif (row[3] != row[4]) and (row[5]< 0):
+                        my_tree.insert("", "end", values=row, tags="yellow")
+                    else:
+                        continue
+
+            my_tree.tag_configure("red", background="#fa9898")
+            my_tree.tag_configure("yellow", background="#e8f28f")
+
+            my_tree.pack(expand=True, fill='both')
+            my_tree.place(x=0, y=0, width=585, height=445)
+                
+            scroll_y = Scrollbar(my_tree, orient='vertical', command=my_tree.yview)
+            scroll_y.place(relx=1, rely=0, relheight=1, anchor='ne')
+
+            scroll_x = Scrollbar(my_tree, orient='horizontal', command=my_tree.xview)
+            scroll_x.pack(side='bottom', fill='x')
+
+            my_tree.configure(xscrollcommand=scroll_x.set, yscrollcommand=scroll_y.set)
+
+            top.destroy()
+
         def edit():
             selected_item = my_tree.selection()
             data = my_tree.item(selected_item, 'values')
-            print(data)
+
+            top = Toplevel()
+            top.title("Edit Data")
+            top.geometry("300x200")
+            top.resizable(False, False)
+
+            plu_label =    Label(top, text='PLU Number    :')
+            plu_label.place(x=10, y=10)
+            plu_entry =    Label(top, text=data[1])
+            plu_entry.place(x=100, y=10)
+
+            name_label =   Label(top, text='Product Name :')
+            name_label.place(x=10, y=45)
+            name_entry =   Label(top, text=data[2])
+            name_entry.place(x=100, y=45)
+
+            raptor_label = Label(top, text='In-Raptor          :')
+            raptor_label.place(x=10, y=80)
+            raptor_entry = Entry(top, width=30)
+            raptor_entry.insert(0, data[3])
+            raptor_entry.place(x=100, y=80)
+            
+            wh_label =     Label(top, text='SJ - WH             :')
+            wh_label.place(x=10, y=115)
+            wh_entry = Entry(top, width=30)
+            wh_entry.insert(0, data[4])
+            wh_entry.place(x=100, y=115)
+
+            save_btn = Button(top, 
+                              text="Save", 
+                              command=lambda : save(
+                                    id=data[0],
+                                    wh=wh_entry.get(),
+                                    raptor=raptor_entry.get(),
+                                    top = top
+                              ), 
+                              width=10)
+            save_btn.place(x=180, y=155)
 
         def popup(event):
             # Menampilkan popup hanya jika ada item yang dipilih
