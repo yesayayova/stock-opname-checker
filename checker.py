@@ -11,9 +11,9 @@ from tkinter import filedialog, ttk
 ## --- IMPORTANT VARIABLE ----------------------------------
 PATH_FILE = ""
 
-TABLE_REKAP = ""
-TABLE_SJWH = ""
-TABLE_STOCK = ""
+TABLE_REKAP = pd.DataFrame([[]])
+TABLE_SJWH = pd.DataFrame([[]])
+TABLE_STOCK = pd.DataFrame([[]])
 
 TABLE_NAME = ""
 FILE_OPEN = False
@@ -21,12 +21,161 @@ FILE_OPEN = False
 LIST_FOLDER = []
 CURRENT_TABLE_ID = 0
 
+my_tree = ""
+TABLE_ORIGINAL = ""
+TABLE_OUTPUT = ""
+
+def save_file():
+    table = TABLE_REKAP.get_table_original()
+    table.drop(labels=['ID', 'Selisih'], axis='columns', inplace=True)
+
+    save_filename = filedialog.asksaveasfilename(defaultextension=".xlsx",
+                                             initialdir="C:/",
+                                             title="Save",
+                                             filetypes=(('Microsoft Excel', "*.xlsx"), ("All Files", "*.*")))
+
+    if save_filename:
+        table.to_excel(save_filename)
+
+def save(top, frame, raptor, wh, id):
+    global TABLE_REKAP
+
+    TABLE_REKAP.edit_table(raptor=raptor, sjwh=wh, id=int(id))
+    show_rekap(frame)
+    top.destroy()
+
+def edit(frame):
+    selected_item = my_tree.selection()
+    data = my_tree.item(selected_item, 'values')
+    
+    top = Toplevel()
+    top.title('Edit')
+
+    width = 260
+    height = 200
+
+    screen_width = top.winfo_screenwidth()
+    screen_height = top.winfo_screenheight()
+
+    x = (screen_width / 2) - (width / 2)
+    y = (screen_height / 2) - (height / 2)
+
+    top.geometry(f"{width}x{height}+{int(x)}+{int(y)}")
+    top.resizable(False, False)
+
+    # top_paned = PanedWindow(top,bd=2, relief='groove')
+    # top_paned.place(x=5, y=5, width=290, height=190)
+
+    plu_label = Label(top, text='PLU Number')
+    plu_label.place(x=10, y=10)
+    plu_value = Label(top, text=data[1])
+    plu_value.place(x=100, y=10)
+
+    name_label = Label(top, text='Name')
+    name_label.place(x=10, y=45)
+    name_value = Label(top, text=data[2])
+    name_value.place(x=100, y=45)
+
+    raptor_label = Label(top, text='In-Raptor')
+    raptor_label.place(x=10, y=80)
+    raptor_value = Entry(top, width=20)
+    raptor_value.insert(0, data[3])
+    raptor_value.place(x=100, y=80)
+
+    wh_label = Label(top, text='In-SJ WH')
+    wh_label.place(x=10, y=115)
+    wh_value = Entry(top, width=20)
+    wh_value.insert(0, data[4])
+    wh_value.place(x=100, y=115)
+
+    save_btn = Button(top, 
+                      width=10, 
+                      text='Save', 
+                      command=lambda : save(top=top,
+                                            frame=frame,
+                                            raptor=raptor_value.get(),
+                                            wh=wh_value.get(),
+                                            id=data[0]),
+                      relief="ridge", 
+                      borderwidth=1, 
+                      border=1)
+    save_btn.place(x=120, y=160)
+
+def popup(event):
+    global popup_menu
+    # Menampilkan popup hanya jika ada item yang dipilih
+    if my_tree.selection():
+        popup_menu.post(event.x_root, event.y_root)
+
+def show_rekap(frame, mode="off"):
+        global TABLE_REKAP, my_tree, popup_menu
+
+        table = TABLE_REKAP.get_table_output()
+        my_tree = ttk.Treeview(frame)
+
+        # Clear old treeview
+        my_tree.delete(*my_tree.get_children())
+
+        # Set up new tree
+        my_tree['column'] = list(table.columns)
+        my_tree['show'] = "headings"
+            
+        # Set up all column names
+        for column in my_tree['column']:        
+            my_tree.heading(column, text=column, anchor=W)
+            if 'PLU' in column:
+                my_tree.column(column, width=140)
+            elif 'ID' in column:
+                my_tree.column(column, width=20)
+            else:
+                my_tree.column(column, width=70)
+        # Set up all rows
+        df_rows = table.to_numpy().tolist()
+        
+        if mode == "off":
+            for i, row in enumerate(df_rows):
+                if (row[3] != row[4]) and (row[5]> 0):
+                    # print(row)
+                    my_tree.insert("", "end", values=row, tags="red")
+                elif (row[3] != row[4]) and (row[5]< 0):
+                    my_tree.insert("", "end", values=row, tags="yellow")
+                else:
+                    my_tree.insert("", "end", values=row, tags="white")
+        
+        elif mode == "on":
+            for i, row in enumerate(df_rows):
+                if (row[3] != row[4]) and (row[5]> 0):
+                    # print(row)
+                    my_tree.insert("", "end", values=row, tags="red")
+                elif (row[3] != row[4]) and (row[5]< 0):
+                    my_tree.insert("", "end", values=row, tags="yellow")
+                else:
+                    continue
+
+        my_tree.tag_configure("red", background="#fa9898")
+        my_tree.tag_configure("yellow", background="#e8f28f")
+
+        my_tree.pack(expand=True, fill='both')
+        my_tree.place(x=0, y=0, width=585, height=445)
+            
+        scroll_y = Scrollbar(my_tree, orient='vertical', command=my_tree.yview)
+        scroll_y.place(relx=1, rely=0, relheight=1, anchor='ne')
+
+        scroll_x = Scrollbar(my_tree, orient='horizontal', command=my_tree.xview)
+        scroll_x.pack(side='bottom', fill='x')
+
+        my_tree.configure(xscrollcommand=scroll_x.set, yscrollcommand=scroll_y.set)
+
+        popup_menu = Menu(frame, tearoff=0)
+        popup_menu.add_command(label="Edit", command=lambda : edit(frame))
+
+        my_tree.bind("<Button-3>", popup)
 
 def dummy():
     pass
 
 def open_file(path = "", frame_rekap="", frame_stock="", frame_sjwh=""):
-    global PATH_FILE, TABLE_REKAP, TABLE_SJWH, TABLE_STOCK, TABLE_NAME, FILE_OPEN, CURRENT_TABLE_ID, switch, log
+    global PATH_FILE, TABLE_REKAP, TABLE_SJWH, TABLE_STOCK, TABLE_NAME, FILE_OPEN, CURRENT_TABLE_ID, switch
 
     if path == "":
         filename = filedialog.askopenfilename(initialdir="C:/",
@@ -36,21 +185,25 @@ def open_file(path = "", frame_rekap="", frame_stock="", frame_sjwh=""):
     else:
         PATH_FILE = path
 
-    print(PATH_FILE)
+    # print(PATH_FILE)
 
-    TABLE_REKAP = tb.Rekap(PATH_FILE, frame=frame_rekap)
-    TABLE_REKAP.show()
+    try:
+        TABLE_REKAP = tb.Rekap(PATH_FILE, frame=frame_rekap)
+        show_rekap(frame_rekap)
+        # TABLE_REKAP.show()
 
-    TABLE_SJWH = tb.SJWH(PATH_FILE, frame=frame_sjwh)
-    TABLE_SJWH.show()
+        TABLE_SJWH = tb.SJWH(PATH_FILE, frame=frame_sjwh)
+        TABLE_SJWH.show()
 
-    TABLE_STOCK = tb.Stock(PATH_FILE, frame=frame_stock)
-    TABLE_STOCK.show()
+        TABLE_STOCK = tb.Stock(PATH_FILE, frame=frame_stock)
+        TABLE_STOCK.show()
 
-    TABLE_NAME.config(text="Table : " + PATH_FILE.split('/')[-1])
+        TABLE_NAME.config(text="Table : " + PATH_FILE.split('/')[-1])
 
-    FILE_OPEN = TRUE
-    switch_btn.configure(state=ACTIVE)
+        FILE_OPEN = True
+        switch_btn.configure(state=ACTIVE)
+    except:
+        return 0
 
 def open_folder(frame_rekap, frame_stock, frame_sjwh):
     global LIST_FOLDER, CURRENT_TABLE_ID
@@ -71,36 +224,38 @@ def open_folder(frame_rekap, frame_stock, frame_sjwh):
 def next(frame_rekap, frame_stock, frame_sjwh):
     global CURRENT_TABLE_ID
 
-    if CURRENT_TABLE_ID == len(LIST_FOLDER)-1:
-        print('test')
+    if len(LIST_FOLDER) == 0:
         return 0
     else:
-        CURRENT_TABLE_ID += 1
-        path = LIST_FOLDER[CURRENT_TABLE_ID]
-        open_file(path=path, 
-              frame_rekap=frame_rekap, 
-              frame_sjwh=frame_sjwh,
-              frame_stock=frame_stock)
-    print(path)
+        if CURRENT_TABLE_ID == len(LIST_FOLDER)-1:
+            print('test')
+            return 0
+        else:
+            CURRENT_TABLE_ID += 1
+            path = LIST_FOLDER[CURRENT_TABLE_ID]
+            open_file(path=path, 
+                frame_rekap=frame_rekap, 
+                frame_sjwh=frame_sjwh,
+                frame_stock=frame_stock)
+        print(path)
 
 def prev(frame_rekap, frame_stock, frame_sjwh):
     global CURRENT_TABLE_ID
 
-    if CURRENT_TABLE_ID == 0:
+    if len(LIST_FOLDER) == 0:
         return 0
     else:
-        CURRENT_TABLE_ID -= 1
-        path = LIST_FOLDER[CURRENT_TABLE_ID]
-        open_file(path=path, 
-              frame_rekap=frame_rekap, 
-              frame_sjwh=frame_sjwh,
-              frame_stock=frame_stock)
-    print(path)
-    
-
-def show_tables():
-    pass
-
+        if CURRENT_TABLE_ID == 0:
+            return 0
+        else:
+            CURRENT_TABLE_ID -= 1
+            path = LIST_FOLDER[CURRENT_TABLE_ID]
+            open_file(path=path, 
+                frame_rekap=frame_rekap, 
+                frame_sjwh=frame_sjwh,
+                frame_stock=frame_stock)
+        print(path)
+        
 def search(frame, seach_value=""):
     global TABLE_SJWH, FILE_OPEN
 
@@ -188,7 +343,7 @@ def main():
         global FILE_OPEN
         
         if FILE_OPEN: 
-            TABLE_REKAP.show(mode=switch_var.get())
+            show_rekap(mode=switch_var.get(), frame=rekap_frame)
         else:
             return 0
 
@@ -211,12 +366,7 @@ def main():
     wh_label.place(x=1130, y=0)
     wh_filter_label = Label(wh_paned, text='Filter  : ')
     wh_filter_label.place(x=10, y=228)
-    # wh_combobox_options = ['']
-    # wh_combobox = ttk.Combobox(wh_paned, values=wh_combobox_options)
-    # wh_combobox.current(0)
-    # wh_combobox.bind("<<ComboboxSelected>>", combo_click)
-    # wh_combobox.place(x=60, y=225)
-
+ 
     wh_search = Entry(wh_paned, width=20)
     wh_search.place(x=60, y=228)
     wh_search_btn = Button(wh_paned, 
@@ -252,16 +402,7 @@ def main():
     stock_combobox.bind("<<ComboboxSelected>>",combo_click)
     stock_combobox.place(x=60, y=225)
 
-    # stock_search = Entry(stock_paned, width=20)
-    # stock_search.place(x=60, y=228)
-    # stock_search_btn = Button(stock_paned, 
-    #                        text='Search', 
-    #                        width=6, 
-    #                        command=dummy, 
-    #                        relief="ridge", 
-    #                        borderwidth=1, 
-    #                        border=1)
-    # stock_search_btn.place(x=190, y=226)
+    my_tree = ttk.Treeview(rekap_frame)
 
     ## --- MENU BAR --------------------------------------------------------
     my_menu = Menu(root)
@@ -276,6 +417,8 @@ def main():
     file_menu.add_command(label='Open Folder ...      ', command=lambda : open_folder(frame_rekap=rekap_frame,
                                                                                       frame_sjwh=wh_frame,
                                                                                       frame_stock=stock_frame))
+    file_menu.add_separator()
+    file_menu.add_command(label='Save                 ', command=save_file)
     file_menu.add_separator()
     file_menu.add_command(label='Exit                 ', command=root.quit)
 
@@ -295,6 +438,7 @@ def main():
     log.place(x=20, y=540)
 
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()
