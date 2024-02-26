@@ -25,25 +25,42 @@ class Rekap:
         df.reset_index(drop=True, inplace=True)
 
         end_point = 0
+        list_selisih = []
+        list_id = []
 
         for i in range(df.shape[0]):
             if type(df.iloc[i]['PLU Number Barcode']) != str:
                 end_point = i
                 break
+            list_selisih.append(df.loc[i, 'IN-RAPTOR'] - df.loc[i, 'IN -SJ WH'])
+            list_id.append(i)
+
         
         df = df.iloc[:end_point]
+        df['Selisih'] = list_selisih
+        df['ID'] = list_id
             
         self.TABLE_ORIGINAL = df
-        self.TABLE_OUTPUT = df[['PLU Number Barcode', 'PLU Name Item Menu', 'IN-RAPTOR', 'IN -SJ WH', 'KET SELISIH']]
+        self.TABLE_OUTPUT = df[['ID', 'PLU Number Barcode', 'PLU Name Item Menu', 'IN-RAPTOR', 'IN -SJ WH', 'Selisih']]
 
-        ket_selisih = []
-        for i in range(self.TABLE_ORIGINAL.shape[0]):
-            # ket_selisih.append(self.TABLE_ORIGINAL.iloc[i]['IN-RAPTOR'] - self.TABLE_ORIGINAL.iloc[i]['IN -SJ WH'])
-            self.TABLE_OUTPUT.loc[i, 'KET SELISIH'] = self.TABLE_ORIGINAL.iloc[i]['IN-RAPTOR'] - self.TABLE_ORIGINAL.iloc[i]['IN -SJ WH']
-        # self.TABLE_OUTPUT['KET SELISIH'] = self.TABLE_OUTPUT['IN-RAPTOR'] - self.TABLE_OUTPUT['IN -SJ WH']
-    
+        # ket_selisih = []
+        # for i in range(self.TABLE_ORIGINAL.shape[0]):
+        #     ket_selisih.append(self.TABLE_ORIGINAL.iloc[i]['IN-RAPTOR'] - self.TABLE_ORIGINAL.iloc[i]['IN -SJ WH'])
         
+        # self.TABLE_OUTPUT.loc[:, 'KET SELISIH'] = ket_selisih
     
+    def get_table_original(self):
+        return self.TABLE_ORIGINAL
+    
+    def get_table_output(self):
+        return self.TABLE_OUTPUT
+    
+    def edit_table(self, raptor, sjwh, id):
+        self.TABLE_ORIGINAL.loc[id, 'IN-RAPTOR'] = raptor
+        self.TABLE_ORIGINAL.loc[id, 'IN -SJ WH'] = sjwh
+        self.TABLE_OUTPUT.loc[id, 'IN-RAPTOR'] = raptor
+        self.TABLE_OUTPUT.loc[id, 'IN -SJ WH'] = sjwh
+
     def show(self, mode="off"):
         my_tree = ttk.Treeview(self.FRAME)
 
@@ -66,20 +83,20 @@ class Rekap:
         
         if mode == "off":
             for i, row in enumerate(df_rows):
-                if (row[2] != row[3]) and (row[4]> 0):
+                if (row[3] != row[4]) and (row[5]> 0):
                     # print(row)
                     my_tree.insert("", "end", values=row, tags="red")
-                elif (row[2] != row[3]) and (row[4]< 0):
+                elif (row[3] != row[4]) and (row[5]< 0):
                     my_tree.insert("", "end", values=row, tags="yellow")
                 else:
                     my_tree.insert("", "end", values=row, tags="white")
         
         elif mode == "on":
             for i, row in enumerate(df_rows):
-                if (row[2] != row[3]) and (row[4]> 0):
+                if (row[3] != row[4]) and (row[5]> 0):
                     # print(row)
                     my_tree.insert("", "end", values=row, tags="red")
-                elif (row[2] != row[3]) and (row[4]< 0):
+                elif (row[3] != row[4]) and (row[5]< 0):
                     my_tree.insert("", "end", values=row, tags="yellow")
                 else:
                     continue
